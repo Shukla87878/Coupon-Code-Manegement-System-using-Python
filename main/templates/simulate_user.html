@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Dummy Users</title>
+</head>
+<body>
+    <h1>Create Dummy Users</h1>
+
+    <form id="userForm">
+        <label for="user_name">User Name:</label>
+        <input type="text" id="user_name" required>
+
+        <label for="user_age_group_new">User Age Group:</label>
+        <select id="user_age_group_new" required>
+            <option value="Under 18">Under 18</option>
+            <option value="18-25">18-25</option>
+            <option value="26-35">26-35</option>
+            <option value="36-45">36-45</option>
+            <option value="46 and above">46 and above</option>
+        </select>
+
+        <label for="signup_date">Signup Date:</label>
+        <input type="date" id="signup_date" required>
+
+        <button type="submit">Create User</button>
+    </form>
+
+    <h2>List of Users</h2>
+    <div id="users"></div>
+
+    <div id="userResponseMessage"></div>
+
+    <script>
+        function handleSubmit(event) {
+    event.preventDefault();
+
+    // Collect input values
+    const userName = document.getElementById('user_name').value.trim();
+    const userAgeGroup = document.getElementById('user_age_group_new').value;
+    const signupDate = document.getElementById('signup_date').value;
+
+    // Validate input values
+    if (!userName || !userAgeGroup || !signupDate) {
+        document.getElementById('userResponseMessage').innerText = 'Please fill in all fields.';
+        return;
+    }
+
+    // Make the POST request to simulate the user creation
+    fetch('/user/create', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            name: userName,
+            user_age_group: userAgeGroup,
+            signup_date: signupDate
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        document.getElementById('userResponseMessage').innerText = data.message;
+        fetchUsers();  // Fetch users after creating a new one
+        resetForm();  // Reset the form
+    })
+    .catch(error => {
+        console.error('Error creating user:', error);
+        document.getElementById('userResponseMessage').innerText = 'Error creating user.';
+    });
+}
+
+// Function to reset the form
+function resetForm() {
+    document.getElementById('user_name').value = '';
+    document.getElementById('user_age_group_new').value = 'Under 18';
+    document.getElementById('signup_date').value = '';
+}
+
+// Function to fetch users
+function fetchUsers() {
+    fetch('/users')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            const usersDiv = document.getElementById('users');
+            usersDiv.innerHTML = '';  // Clear existing users
+            data.forEach(user => {
+                const userDiv = document.createElement('div');
+                userDiv.innerHTML = `
+                    <strong>Name:</strong> ${user.name}<br>
+                    <strong>Age Group:</strong> ${user.user_age_group}<br>
+                    <strong>Signup Date:</strong> ${user.signup_date}<br><br>
+                `;
+                usersDiv.appendChild(userDiv);
+            });
+        })
+        .catch(error => {
+            console.error('Error fetching users:', error);
+        });
+}
+
+// Fetch users on page load
+fetchUsers();
+
+// Add event listener to the form
+document.getElementById('userForm').addEventListener('submit', handleSubmit);
+    </script>
+</body>
+</html>
+
